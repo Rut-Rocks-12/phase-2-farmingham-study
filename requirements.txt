@@ -4,3 +4,4 @@ seaborn
 matplot
 sklearn
 scikit-learn
+scikit-learn==1.2.2
