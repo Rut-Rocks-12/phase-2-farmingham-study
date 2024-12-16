@@ -344,8 +344,21 @@ visualization_type = st.selectbox(
     "Choose Visualization Type",
     ["Distributions", "Correlations", "Feature vs HOSPMI"],
 )
+# Define mappings for categorical variables
+categorical_mappings = {
+    "SEX": {1: "Male", 2: "Female"},
+    "CURSMOKE": {0: "Not Current Smoker", 1: "Current Smoker"},
+    "DIABETES": {0: "No Diabetes", 1: "Has Diabetes"},
+    "BPMEDS": {0: "Not Currently Used", 1: "Current Use"},
+    "PREVHYP": {0: "No Previous Hypertension", 1: "Previous Hypertension"},
+    "PREVMI": {0: "No Previous MI", 1: "Previous MI"},
+    "PREVCHD": {0: "No Previous CHD", 1: "Previous CHD"},
+    "PREVAP": {0: "No Previous AP", 1: "Previous AP"},
+    "PERIOD": {1: "First Period", 2: "Second Period"},
+    "HOSPMI": {0: "Did not occur during followup", 1: "Occurred during followup"},
+    "DEATH": {0: "Did not occur during followup", 1: "Occurred during followup"},
+}
 
-# Visualization options
 if visualization_type == "Distributions":
     st.write("### Feature Distributions")
     
@@ -363,21 +376,19 @@ if visualization_type == "Distributions":
         st.pyplot(fig)
     elif feature_type == "Categorical":
         feature = st.selectbox("Select a Categorical Feature", categorical_features)
+        # Apply mapping during plotting
+        if feature in categorical_mappings:
+            labels = new_data[feature].map(categorical_mappings[feature])
+        else:
+            labels = new_data[feature]
+        
         st.write(f"#### Distribution of {feature}")
         fig, ax = plt.subplots()
-        sns.countplot(x=feature, data=new_data, palette="coolwarm", edgecolor="black")
+        sns.countplot(x=labels, palette="coolwarm", edgecolor="black")
         ax.set_title(f"Distribution of {feature}")
         ax.set_xlabel(feature)
         ax.set_ylabel("Count")
         st.pyplot(fig)
-
-elif visualization_type == "Correlations":
-    st.write("### Correlation Heatmap")
-    correlation_matrix = new_data[numerical_features].corr()
-    fig, ax = plt.subplots(figsize=(10, 8))
-    sns.heatmap(correlation_matrix, annot=True, cmap="coolwarm", fmt=".2f", linewidths=0.5)
-    ax.set_title("Correlation Heatmap")
-    st.pyplot(fig)
 
 elif visualization_type == "Feature vs HOSPMI":
     st.write("### Feature Distributions by HOSPMI")
@@ -389,19 +400,37 @@ elif visualization_type == "Feature vs HOSPMI":
         st.write(f"#### {feature} vs HOSPMI")
         fig, ax = plt.subplots()
         sns.histplot(
-            data=new_data, x=feature, hue="HOSPMI", kde=True, palette="coolwarm", edgecolor="black"
+            data=new_data, 
+            x=feature, 
+            hue=new_data["HOSPMI"].map(categorical_mappings["HOSPMI"]), 
+            kde=True, 
+            palette="coolwarm", 
+            edgecolor="black"
         )
         ax.set_title(f"{feature} vs HOSPMI")
+        ax.set_xlabel(feature)
         st.pyplot(fig)
     elif feature_type == "Categorical":
         feature = st.selectbox("Select a Categorical Feature", categorical_features)
+        # Apply mapping during plotting
+        if feature in categorical_mappings:
+            labels = new_data[feature].map(categorical_mappings[feature])
+        else:
+            labels = new_data[feature]
+
         st.write(f"#### {feature} vs HOSPMI")
         fig, ax = plt.subplots()
-        sns.countplot(x=feature, data=new_data, hue="HOSPMI", palette="coolwarm", edgecolor="black")
+        sns.countplot(
+            x=labels, 
+            hue=new_data["HOSPMI"].map(categorical_mappings["HOSPMI"]), 
+            palette="coolwarm", 
+            edgecolor="black"
+        )
         ax.set_title(f"{feature} vs HOSPMI")
         ax.set_xlabel(feature)
         ax.set_ylabel("Count")
         st.pyplot(fig)
+
 
 
 
@@ -470,7 +499,7 @@ st.write("- Based on ANOVA scores, we might exclude features with very low score
 st.write("- Based on Chi-Square scores, we might exclude features with very low scores (PERIOD).")
 
 st.write('# Predictive Modelling')
-
+st.write('For each of the 3 models, we did hyperparameter tuning to get the best possible outcome, this was done through GridSearch')
 #Defining are Feature and Target variables
 X = new_data[['BPMEDS', 'CURSMOKE', 'PREVHYP', 'SEX', 'DIABETES', 'DEATH', 'PREVAP', 'PREVCHD', 'PREVMI', 'BMI', 'DIABP', 'SYSBP', 'AGE', 'GLUCOSE', 'TOTCHOL', 'CIGPDAY']]
 y = new_data['HOSPMI']
@@ -518,6 +547,9 @@ axes[1].legend(loc="lower right")
 axes[1].grid(alpha=0.5)
 
 st.pyplot(fig)
+st.write("""For the random forest, after hypertuning the best parameters for the model were: 
+         max_depth=10, max_features='sqrt', min_samples_leaf=1, min_samples_split=10, n_estimators=100
+         """)
 
 #KNN Model
 st.write('## KNN Classifier')
@@ -563,6 +595,9 @@ axes[1].legend(loc="lower right")
 axes[1].grid(alpha=0.5)
 
 st.pyplot(fig)
+
+st.write('The best parameters for the KNN classifier were a total of 15 neighbors, weights assigned by distance and the manhattan metric is used')
+
 
 #Logistic Regression Model
 st.write('## Logisitc Regression Classifier')
@@ -610,6 +645,8 @@ axes[1].legend(loc="lower right")
 axes[1].grid(alpha=0.5)
 
 st.pyplot(fig)
+st.write("""After hypertuning these were the best parameters providing the best accuracy: 
+         C=10, penalty='l1', solver='liblinear', max_iter=100""")
 
 st.write('# Conclusion')
 st.write("""
@@ -619,9 +656,69 @@ To check which predictors across the different categories are most relevant in p
 
 The final accuracy and ROC AUC scores are the following for the different models;
 
-Random Forest: Accuracy: 0.93 , AUC: 0.82
+Random Forest: Accuracy: 0.923 , AUC: 0.82
 
-KNN: Accuracy: 0.92 , AUC: 0.75
+KNN: Accuracy: 0.917 , AUC: 0.75
 
-Logistic Regression: Accuracy: 0.92, AUC: 0.83
+Logistic Regression: Accuracy: 0.920, AUC: 0.83
 """)
+
+# Assuming your dataset is already loaded in `new_data`
+# Define feature matrix X and target variable y
+X = new_data[['BPMEDS', 'CURSMOKE', 'PREVHYP', 'SEX', 'DIABETES', 'DEATH', 'PREVAP', 'PREVCHD', 
+              'PREVMI', 'BMI', 'DIABP', 'SYSBP', 'AGE', 'GLUCOSE', 'TOTCHOL', 'CIGPDAY']]
+y = new_data['HOSPMI']
+
+# Split the data into train and test sets
+train_X, test_X, train_y, test_y = train_test_split(X, y, test_size=0.2, stratify=y, random_state=42)
+
+# Initialize the classifier
+clf = RandomForestClassifier(max_depth=10, max_features='sqrt', min_samples_leaf=1, 
+                              min_samples_split=10, n_estimators=100, random_state=0)
+
+# Train the classifier
+clf.fit(train_X, train_y)
+
+# Streamlit App
+st.title("Random Forest Prediction")
+st.write("### Generate Random Values for Prediction")
+
+# Button to generate random input values
+if st.button("Generate Random Values and Predict"):
+    # Generate random input values based on the ranges of current dataset
+    random_input = {
+        'BPMEDS': np.random.choice([0, 1]),  # Binary variable
+        'CURSMOKE': np.random.choice([0, 1]),  # Binary variable
+        'PREVHYP': np.random.choice([0, 1]),  # Binary variable
+        'SEX': np.random.choice([0, 1]),  # Binary variable
+        'DIABETES': np.random.choice([0, 1]),  # Binary variable
+        'DEATH': np.random.choice([0, 1]),  # Binary variable
+        'PREVAP': np.random.choice([0, 1]),  # Binary variable
+        'PREVCHD': np.random.choice([0, 1]),  # Binary variable
+        'PREVMI': np.random.choice([0, 1]),  # Binary variable
+        'BMI': np.random.uniform(X['BMI'].min(), X['BMI'].max()),  # Continuous variable
+        'DIABP': np.random.uniform(X['DIABP'].min(), X['DIABP'].max()),  # Continuous variable
+        'SYSBP': np.random.uniform(X['SYSBP'].min(), X['SYSBP'].max()),  # Continuous variable
+        'AGE': np.random.randint(X['AGE'].min(), X['AGE'].max() + 1),  # Integer variable
+        'GLUCOSE': np.random.uniform(X['GLUCOSE'].min(), X['GLUCOSE'].max()),  # Continuous variable
+        'TOTCHOL': np.random.uniform(X['TOTCHOL'].min(), X['TOTCHOL'].max()),  # Continuous variable
+        'CIGPDAY': np.random.uniform(X['CIGPDAY'].min(), X['CIGPDAY'].max()),  # Continuous variable
+    }
+
+    # Convert the random input to a DataFrame
+    random_input_df = pd.DataFrame([random_input])
+
+    # Predict using the trained model
+    prediction = clf.predict(random_input_df)
+    prediction_proba = clf.predict_proba(random_input_df)
+
+    # Display the random input values
+    st.write("### Randomly Generated Input Values")
+    st.dataframe(random_input_df)
+
+    # Display the prediction
+    st.write("### Prediction")
+    st.write(f"The predicted outcome (HOSPMI): **{prediction[0]}**")
+    st.write("### Prediction Probabilities")
+    st.write(f"Probability of no HOSPMI (0): {prediction_proba[0][0]:.2f}")
+    st.write(f"Probability of HOSPMI (1): {prediction_proba[0][1]:.2f}")
