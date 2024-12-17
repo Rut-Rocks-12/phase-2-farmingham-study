@@ -460,6 +460,7 @@ for col in normal_distri_variables:
     
 
 st.write("### Scaled Data (Preview)")
+st.write('We decided to scale the non-normally distributed variables using MinMaxScalar. And the normal variables using StandardScalar')
 st.dataframe(new_data.head())
 
 # ANOVA Test for Numerical Features
