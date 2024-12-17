@@ -648,22 +648,7 @@ st.pyplot(fig)
 st.write("""After hypertuning these were the best parameters providing the best accuracy: 
          C=10, penalty='l1', solver='liblinear', max_iter=100""")
 
-st.write('# Conclusion')
-st.write("""
-RQ: What are the most significant predictors of hospitalized myocardial infarction (HOSPMI) during follow-up, and how accurately can these predictors classify individuals at risk of an MI using a predictive model?
 
-To check which predictors across the different categories are most relevant in predicting a myocardal infarction we can look at the correlation with HOSPMI after performing feature engineering. As we can see the PREVMI (0.4), PREVCHD (0.33), DEATH (0.24), PREVAP (0.23), SEX (-0.2) has the hieghest correlation. Although these variables are strong predictors. Other predictors that are less strong include: DIABETES, SYSBP, PREVHYP. The predictors with the least correlation include: BPMEDS (0.071), PERIOD (-0.0071), and TIME (-0.0078).
-
-The final accuracy and ROC AUC scores are the following for the different models;
-
-Random Forest: Accuracy: 0.923 , AUC: 0.82
-
-KNN: Accuracy: 0.917 , AUC: 0.75
-
-Logistic Regression: Accuracy: 0.920, AUC: 0.83
-""")
-
-# Assuming your dataset is already loaded in `new_data`
 # Define feature matrix X and target variable y
 X = new_data[['BPMEDS', 'CURSMOKE', 'PREVHYP', 'SEX', 'DIABETES', 'DEATH', 'PREVAP', 'PREVCHD', 
               'PREVMI', 'BMI', 'DIABP', 'SYSBP', 'AGE', 'GLUCOSE', 'TOTCHOL', 'CIGPDAY']]
@@ -679,7 +664,7 @@ clf = RandomForestClassifier(max_depth=10, max_features='sqrt', min_samples_leaf
 # Train the classifier
 clf.fit(train_X, train_y)
 
-# Streamlit App
+
 st.title("Random Forest Prediction")
 st.write("### Generate Random Values for Prediction")
 
@@ -722,3 +707,20 @@ if st.button("Generate Random Values and Predict"):
     st.write("### Prediction Probabilities")
     st.write(f"Probability of no HOSPMI (0): {prediction_proba[0][0]:.2f}")
     st.write(f"Probability of HOSPMI (1): {prediction_proba[0][1]:.2f}")
+
+st.write('# Conclusion')
+st.write("""
+RQ: What are the most significant predictors of hospitalized myocardial infarction (HOSPMI) during follow-up, and how accurately can these predictors classify individuals at risk of an MI using a predictive model?
+
+To check which predictors across the different categories are most relevant in predicting a myocardal infarction we can look at the correlation with HOSPMI after performing feature engineering. As we can see the PREVMI (0.4), PREVCHD (0.33), DEATH (0.24), PREVAP (0.23), SEX (-0.2) has the hieghest correlation. Although these variables are strong predictors. Other predictors that are less strong include: DIABETES, SYSBP, PREVHYP. The predictors with the least correlation include: BPMEDS (0.071), PERIOD (-0.0071), and TIME (-0.0078).
+
+The final accuracy and ROC AUC scores are the following for the different models;
+
+Random Forest: Accuracy: 0.923 , AUC: 0.82
+
+KNN: Accuracy: 0.917 , AUC: 0.75
+
+Logistic Regression: Accuracy: 0.920, AUC: 0.83
+""")
+
+
